@@ -2,25 +2,38 @@ FROM php:7.2-apache-buster
 
 RUN apt-get update && \
     apt-get install -y \
-        libonig-dev \
-        libzip-dev \
-        libpng-dev \
-        zlib1g-dev \
-        libmcrypt-dev \
-        vim \
         git \
-        supervisor \
-        zip \
-        procps \
         libfreetype6-dev \
-        libwebp-dev \
-        libpng-dev \
         libgmp-dev \
+        libjpeg62-turbo-dev \
         libldap2-dev \
+        libmcrypt-dev \
+        libonig-dev \
+        libpng-dev \
+        libwebp-dev \
+        libzip-dev \
         netcat \
-        apache2
+        procps \
+        supervisor \
+        vim \
+        zip \
+        zlib1g-dev
 
-RUN docker-php-ext-install gmp pcntl ldap sysvmsg exif mbstring zip gd bcmath mysqli pdo pdo_mysql
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/  --with-jpeg-dir=/usr/include/
+
+RUN docker-php-ext-install \
+    bcmath \
+    exif \
+    gd \
+    gmp \
+    ldap \
+    mbstring \
+    mysqli \
+    pcntl \
+    pdo \
+    pdo_mysql \
+    sysvmsg \
+    zip
 
 RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
     && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
