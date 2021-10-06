@@ -1,4 +1,4 @@
-FROM php:7.2-apache-buster
+FROM php:7.2.34-fpm
 
 RUN apt-get update && \
     apt-get install -y \
@@ -13,6 +13,7 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
+        nginx  \
         procps \
         supervisor \
         vim \
@@ -43,14 +44,19 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ 
 
 WORKDIR /var/www/html
 
-RUN chmod -R 777 /var/www/html \
-    && mkdir public
+RUN mkdir /var/www/html/public
 
-COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY files/nginx/nginx.conf /etc/nginx/nginx.conf
 
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+#supervisor config
+COPY files/supervisord.conf /etc/supervisor/supervisord.conf
+COPY files/supervisord.conf /etc/supervisord.conf
 
-RUN a2enmod rewrite \
-    && rm -rf public \
+COPY files/entrypoint.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
+
+RUN rm -rf /var/www/html/public \
     && apt-get clean
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
