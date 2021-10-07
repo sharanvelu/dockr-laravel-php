@@ -17,8 +17,7 @@ RUN apt-get update && \
         libpng-dev \
         libgmp-dev \
         libldap2-dev \
-        netcat \
-        apache2
+        netcat
 
 RUN docker-php-ext-install gmp pcntl ldap sysvmsg exif mbstring zip gd bcmath mysqli pdo pdo_mysql
 
