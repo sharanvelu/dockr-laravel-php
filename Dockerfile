@@ -21,9 +21,13 @@ RUN apt-get update && \
 
 RUN docker-php-ext-install gmp pcntl ldap sysvmsg exif mbstring zip gd bcmath mysqli pdo pdo_mysql
 
+RUN pecl install xdebug
+
 RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
     && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
+
+COPY files/php_conf/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer --version=2.1.3
 
