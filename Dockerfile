@@ -1,4 +1,4 @@
-FROM php:7.3.2-apache
+FROM php:7.3.6-apache
 
 RUN apt-get update && \
     apt-get install -y \
