@@ -1,4 +1,4 @@
-FROM php:7.3-apache-buster
+FROM php:7.3.2-apache
 
 RUN apt-get update && \
     apt-get install -y \
@@ -12,13 +12,18 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
-        npm \
         procps \
         supervisor \
         vim \
         yarn \
         zip \
         zlib1g-dev
+
+# Node and NPM
+SHELL ["/bin/bash", "--login", "-c"]
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+RUN nvm install 16.13.0
+SHELL ["/bin/sh", "-c"]
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
 
