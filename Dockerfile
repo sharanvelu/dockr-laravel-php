@@ -1,5 +1,7 @@
 FROM php:8.0-apache-buster
 
+LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
+
 RUN apt-get update && \
     apt-get install -y \
         git \
@@ -41,8 +43,19 @@ RUN chmod -R 777 /var/www/html \
 
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+#supervisor config
+COPY supervisor/supervisor.conf /etc/supervisor/supervisord.conf
+COPY supervisor/supervisor.conf /etc/supervisord.conf
+COPY supervisor /etc/supervisor/disabled
+
+ENV DOCKR_SERVER_TYPE="apache"
+
+COPY entrypoint.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
+
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 RUN a2enmod rewrite \
     && rm -rf public \
