@@ -1,4 +1,4 @@
-FROM php:7.3.2-apache
+FROM php:7.3.24-apache
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
