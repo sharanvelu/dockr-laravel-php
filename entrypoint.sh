@@ -1,7 +1,9 @@
 #!/bin/bash
 
-RUN chmod -R 777 /var/www/html
-
-a2enmod rewrite
+if [ "${DOCKR_CONTAINER_TYPE}" == "worker" ]; then
+    cp /etc/supervisor/disabled/supervisor-worker.conf /etc/supervisor/conf.d/supervisor-worker.conf
+else
+    cp "/etc/supervisor/disabled/supervisor-${DOCKR_SERVER_TYPE}.conf" "/etc/supervisor/conf.d/supervisor-${DOCKR_SERVER_TYPE}.conf"
+fi
 
 exec "$@"
