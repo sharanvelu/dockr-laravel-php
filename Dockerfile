@@ -1,4 +1,4 @@
-FROM php:7.3-apache
+FROM php:5.6-apache
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
@@ -27,10 +27,10 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | b
 RUN nvm install 16.13.0
 SHELL ["/bin/sh", "-c"]
 
-RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
+RUN docker-php-ext-install bcmath exif gd mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
 
 # xDebug
-RUN pecl install xdebug
+RUN pecl install xdebug-2.5.0
 COPY php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 # Php Conf
