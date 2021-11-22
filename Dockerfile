@@ -1,4 +1,4 @@
-FROM php:7.2.5-fpm
+FROM php:7.2.4-fpm
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
@@ -16,13 +16,18 @@ RUN apt-get update && \
         libzip-dev \
         netcat \
         nginx  \
-        npm \
         procps \
         supervisor \
         vim \
         yarn \
         zip \
         zlib1g-dev
+
+# Node and NPM
+SHELL ["/bin/bash", "--login", "-c"]
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+RUN nvm install 16.13.0
+SHELL ["/bin/sh", "-c"]
 
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/  --with-jpeg-dir=/usr/include/
 
