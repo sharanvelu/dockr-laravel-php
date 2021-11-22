@@ -1,5 +1,7 @@
 FROM php:7.2.34-fpm
 
+LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
+
 RUN apt-get update && \
     apt-get install -y \
         git \
@@ -38,13 +40,12 @@ RUN docker-php-ext-install \
     sysvmsg \
     zip
 
-RUN pecl install xdebug && docker-php-ext-enable xdebug
+RUN pecl install xdebug
+COPY php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
     && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
-
-COPY files/php_conf/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer --version=2.1.3
 
@@ -52,17 +53,19 @@ WORKDIR /var/www/html
 
 RUN mkdir /var/www/html/public
 
-COPY files/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+ENV DOCKR_SERVER_TYPE="nginx"
 
 #supervisor config
-COPY files/supervisord.conf /etc/supervisor/supervisord.conf
-COPY files/supervisord.conf /etc/supervisord.conf
+COPY supervisor/supervisor.conf /etc/supervisor/supervisord.conf
+COPY supervisor/supervisor.conf /etc/supervisord.conf
+COPY supervisor /etc/supervisor/disabled
 
-COPY files/entrypoint.sh /usr/bin/entrypoint.sh
+COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
 RUN rm -rf /var/www/html/public \
     && apt-get clean
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
