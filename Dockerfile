@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM php:7.1.3-apache
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
@@ -15,12 +15,10 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
-        nginx  \
         npm \
         procps \
         supervisor \
         vim \
-        yarn \
         zip \
         zlib1g-dev
 
@@ -31,7 +29,6 @@ RUN docker-php-ext-install \
     exif \
     gd \
     gmp \
-    ldap \
     mbstring \
     mysqli \
     pcntl \
@@ -39,9 +36,6 @@ RUN docker-php-ext-install \
     pdo_mysql \
     sysvmsg \
     zip
-
-RUN pecl install xdebug
-COPY php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
 RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
     && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
@@ -53,8 +47,8 @@ WORKDIR /var/www/html
 
 RUN mkdir /var/www/html/public
 
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-ENV DOCKR_SERVER_TYPE="nginx"
+COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+ENV DOCKR_SERVER_TYPE="apache"
 
 #supervisor config
 COPY supervisor/supervisor.conf /etc/supervisor/supervisord.conf
