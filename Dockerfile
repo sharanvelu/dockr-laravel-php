@@ -33,8 +33,15 @@ RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.
     && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
 
+# DockR Dependencies
+RUN mkdir /usr/local/dockr
+
+# DockR scripts
+COPY scripts /usr/local/dockr/scripts
+RUN chmod u+x -R /usr/local/dockr/scripts
+
 # Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer --version=2.1.3
+RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
 
 WORKDIR /var/www/html
 
