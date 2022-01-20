@@ -1,4 +1,4 @@
-FROM php:8.0-apache-buster
+FROM php:8.0.0-apache-buster
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
@@ -24,31 +24,29 @@ RUN apt-get update && \
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
 
+# PHP Memory Limit conf
+COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
+
 # xDebug
 RUN pecl install xdebug
-COPY php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
 
-# Php Conf
-RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
-    && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
+# DockR Dependencies
+RUN mkdir /usr/local/dockr && chmod u+x -R /usr/local/dockr
+COPY dockr /usr/local/dockr
 
 # Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer --version=2.1.3
+RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
 
 WORKDIR /var/www/html
 
-RUN chmod -R 777 /var/www/html \
-    && mkdir public
+RUN chmod -R 777 /var/www/html && mkdir public
 
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 #supervisor config
-COPY supervisor/supervisor.conf /etc/supervisor/supervisord.conf
-COPY supervisor/supervisor.conf /etc/supervisord.conf
-COPY supervisor /etc/supervisor/disabled
-
-ENV DOCKR_SERVER_TYPE="apache"
+COPY dockr/supervisor/supervisor.conf /etc/supervisor/supervisord.conf
+COPY dockr/supervisor/supervisor.conf /etc/supervisord.conf
 
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
