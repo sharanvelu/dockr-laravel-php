@@ -24,43 +24,39 @@ RUN apt-get update && \
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
 
+# PHP Memory Limit conf
+COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
+
 # xDebug
 RUN pecl install xdebug
-COPY php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
-
-# Php Conf
-RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
-    && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
+COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
 
 # DockR Dependencies
-RUN mkdir /usr/local/dockr
+RUN mkdir /usr/local/dockr && chmod u+x -R /usr/local/dockr
 
 # DockR scripts
-COPY scripts /usr/local/dockr/scripts
-RUN chmod u+x -R /usr/local/dockr/scripts
+COPY dockr /usr/local/dockr
 
 # Composer
 RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
 
 WORKDIR /var/www/html
 
-RUN chmod -R 777 /var/www/html \
-    && mkdir public
+RUN chmod -R 777 /var/www/html && mkdir public
 
+# Apache
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-ENV DOCKR_SERVER_TYPE="apache"
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 #supervisor config
-COPY supervisor/supervisor.conf /etc/supervisor/supervisord.conf
-COPY supervisor/supervisor.conf /etc/supervisord.conf
-COPY supervisor /etc/supervisor/disabled
+COPY dockr/supervisor/supervisor.conf /etc/supervisor/supervisord.conf
+COPY dockr/supervisor/supervisor.conf /etc/supervisord.conf
 
+# Entrypoint
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 RUN a2enmod rewrite \
