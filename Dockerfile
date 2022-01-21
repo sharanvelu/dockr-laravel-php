@@ -42,17 +42,19 @@ WORKDIR /var/www/html
 
 RUN chmod -R 777 /var/www/html && mkdir public
 
+# Apache
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-#supervisor config
+# Supervisor config
 COPY dockr/supervisor/supervisor.conf /etc/supervisor/supervisord.conf
 COPY dockr/supervisor/supervisor.conf /etc/supervisord.conf
 
+# Entrypoint
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 RUN a2enmod rewrite \
