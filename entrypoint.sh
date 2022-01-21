@@ -1,6 +1,8 @@
 #!/bin/bash
 
-/usr/local/dockr/scripts/worker-definition.sh
-/usr/local/dockr/scripts/composer-version.sh
+for SCRIPT in /usr/local/dockr/scripts/*.sh; do
+    chmod +x ${SCRIPT}
+    ${SCRIPT}
+done
 
 exec "$@"
