@@ -1,4 +1,4 @@
-FROM php:7.4.2-apache-buster
+FROM php:7.4.6-apache-buster
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
