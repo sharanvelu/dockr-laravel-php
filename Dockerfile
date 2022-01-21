@@ -46,7 +46,7 @@ RUN chmod -R 777 /var/www/html && mkdir public
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-#supervisor config
+# Supervisor config
 COPY dockr/supervisor/supervisor.conf /etc/supervisor/supervisord.conf
 COPY dockr/supervisor/supervisor.conf /etc/supervisord.conf
 
