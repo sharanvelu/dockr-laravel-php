@@ -11,6 +11,7 @@ RUN apt-get update && \
         libmcrypt-dev \
         libonig-dev \
         libpng-dev \
+        libpq-dev \
         libwebp-dev \
         libzip-dev \
         netcat \
@@ -20,7 +21,6 @@ RUN apt-get update && \
         vim \
         yarn \
         zip \
-        libpq-dev \
         zlib1g-dev
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql pdo_pgsql sysvmsg zip
