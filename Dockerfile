@@ -11,6 +11,7 @@ RUN apt-get update && \
         libmcrypt-dev \
         libonig-dev \
         libpng-dev \
+        libpq-dev \
         libwebp-dev \
         libzip-dev \
         netcat \
@@ -22,7 +23,7 @@ RUN apt-get update && \
         zip \
         zlib1g-dev
 
-RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
+RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql pdo_pgsql sysvmsg zip
 
 # PHP Memory Limit conf
 COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
