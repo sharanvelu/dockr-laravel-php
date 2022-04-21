@@ -15,7 +15,6 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
-        npm \
         procps \
         supervisor \
         vim \
@@ -24,6 +23,13 @@ RUN apt-get update && \
         zlib1g-dev
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql pdo_pgsql sysvmsg zip
+
+# Node and NPM
+SHELL ["/bin/bash", "--login", "-c"]
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+RUN nvm install 17.8.0
+RUN npm install -g npm@8.7.0
+SHELL ["/bin/sh", "-c"]
 
 # PHP Memory Limit conf
 COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
