@@ -12,6 +12,7 @@ RUN apt-get update && \
         libmcrypt-dev \
         libonig-dev \
         libpng-dev \
+        libpq-dev \
         libwebp-dev \
         libzip-dev \
         netcat \
@@ -37,6 +38,7 @@ RUN docker-php-ext-install \
     pcntl \
     pdo \
     pdo_mysql \
+    pdo_pgsql \
     sysvmsg \
     zip
 
