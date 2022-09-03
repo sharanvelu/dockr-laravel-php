@@ -19,11 +19,8 @@ jobs:
     steps:
       - name: Extract branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=branch;]$(echo ${${GITHUB_REF#refs/heads/}//v/})"
         id: extract_branch
-      - name: Push to ECR
-        id: ecr
-        run: echo eng:${{ steps.extract_branch.outputs.branch }}
 
 #       - name: checkout code
 #         uses: actions/checkout@v2
@@ -37,6 +34,6 @@ jobs:
 #       - name: build the image
 #         run: |
 #           pwd && ls && docker buildx build --push \
-#             --tag sharanvelu/laravel-php:test-github-actions \
+#             --tag sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }} \
 #             --platform linux/arm64,linux/amd64 .
 
