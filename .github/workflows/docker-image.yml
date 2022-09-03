@@ -37,3 +37,4 @@ jobs:
           pwd && ls && docker buildx build --push \
             --tag sharanvelu/laravel-php:test-github-actions \
             --platform linux/arm64,linux/amd64,linux/arm/v7 .
+
