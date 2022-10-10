@@ -28,7 +28,7 @@ jobs:
                     url: https://docs.dockr.in/webhook/github-actions
                     method: "POST"
                     headers: '{"Content-Type": "application/json"}'
-                    body: '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Started Testing", "started_by": "${{ github.actor }} Test", "data": {"Action Id": "${{ github.run_id }}", "Github Repo": "${{ github.repository }}", "Github Workflow": "${{ github.workflow }}", "Github Run Number": "${{ github.run_number }}"}}'
+                    body: '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Started", "started_by": "${{ github.actor }}", "data": {"Action Id": "${{ github.run_id }}", "Github Repo": "${{ github.repository }}", "Github Workflow": "${{ github.workflow }}", "Github Run Number": "${{ github.run_number }}"}}'
                     timeout: 4000
 
             -   name: Checkout
