@@ -23,8 +23,13 @@ jobs:
                 id: extract_branch
 
             -   name: Action Starting Webhook
-                run: |
-                    curl -d '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Started", "started_by": "${{ github.actor }}", "data": {"Action Id": "${{ github.run_id }}", "Github Repo": "${{ github.repository }}", "Github Workflow": "${{ github.workflow }}", "Github Run Number": "${{ github.run_number }}"}}' -H "Content-Type: application/json" -X POST https://docs.dockr.in/webhook/github-actions
+                uses: indiesdev/curl@v1.1
+                with:
+                    url: https://docs.dockr.in/webhook/github-actions
+                    method: "POST"
+                    headers: '{"Content-Type": "application/json"}'
+                    body: '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Started Testing", "started_by": "${{ github.actor }} Test", "data": {"Action Id": "${{ github.run_id }}", "Github Repo": "${{ github.repository }}", "Github Workflow": "${{ github.workflow }}", "Github Run Number": "${{ github.run_number }}"}}'
+                    timeout: 4000
 
             -   name: Checkout
                 uses: actions/checkout@v3
@@ -50,5 +55,10 @@ jobs:
                     tags: sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }}
 
             -   name: Action Completion Webhook
-                run: |
-                    curl -d '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Completed", "started_by": "${{ github.actor }}", "data": {"Action Id": "${{ github.run_id }}", "Github Workflow": "${{ github.workflow }}"}}' -H "Content-Type: application/json" -X POST https://docs.dockr.in/webhook/github-actions
+                uses: indiesdev/curl@v1.1
+                with:
+                    url: https://docs.dockr.in/webhook/github-actions
+                    method: "POST"
+                    headers: '{"Content-Type": "application/json"}'
+                    body: '{"tag": "${{ steps.extract_branch.outputs.branch }}", "message": "Docker Build Completed", "started_by": "${{ github.actor }}", "data": {"Action Id": "${{ github.run_id }}", "Github Workflow": "${{ github.workflow }}"}}'
+                    timeout: 4000
