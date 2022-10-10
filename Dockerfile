@@ -14,7 +14,6 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
-        npm \
         procps \
         supervisor \
         vim \
@@ -23,6 +22,9 @@ RUN apt-get update && \
         zlib1g-dev
 
 RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
+
+# Node and NPM
+RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/node-npm-install.sh | bash
 
 # PHP Memory Limit conf
 COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
