@@ -11,6 +11,7 @@ RUN apt-get update && \
         libmcrypt-dev \
         libonig-dev \
         libpng-dev \
+        libpq-dev \
         libwebp-dev \
         libzip-dev \
         netcat \
@@ -21,7 +22,7 @@ RUN apt-get update && \
         zip \
         zlib1g-dev
 
-RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql sysvmsg zip
+RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql pdo_pgsql sysvmsg zip
 
 # Node and NPM
 RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/node-npm-install.sh | bash
