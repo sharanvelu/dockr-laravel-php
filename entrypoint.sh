@@ -3,6 +3,6 @@
 chmod +x /usr/local/dockr/composer-version.sh
 /usr/local/dockr/composer-version.sh
 
-php-fpm -D
+service nginx start
 
 exec "$@"

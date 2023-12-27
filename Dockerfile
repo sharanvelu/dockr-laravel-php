@@ -65,7 +65,7 @@ COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
-CMD ["service", "nginx", "start"]
+CMD ["php-fpm"]
 
 RUN rm -rf /var/www/html/public \
     && apt-get clean
