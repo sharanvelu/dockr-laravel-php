@@ -57,9 +57,9 @@ WORKDIR /var/www/html
 
 RUN mkdir /var/www/html/public
 
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
-COPY dockr/scripts/composer-version.sh /usr/local/dockr/composer-version.sh
+COPY composer-version.sh /usr/local/dockr/composer-version.sh
 
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
