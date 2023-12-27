@@ -1,8 +1,8 @@
 #!/bin/bash
 
-for SCRIPT in /usr/local/dockr/scripts/*.sh; do
-    chmod +x ${SCRIPT}
-    ${SCRIPT}
-done
+chmod +x /usr/local/dockr/composer-version.sh
+/usr/local/dockr/composer-version.sh
+
+php-fpm -D
 
 exec "$@"
