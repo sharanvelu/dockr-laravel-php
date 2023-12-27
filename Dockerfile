@@ -1,4 +1,4 @@
-FROM php:8.0-apache-buster
+FROM php:8.0-fpm
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
@@ -6,6 +6,7 @@ RUN apt-get update && \
     apt-get install -y \
         git \
         libfreetype6-dev \
+        libjpeg62-turbo-dev \
         libldap2-dev \
         libgmp-dev \
         libmcrypt-dev \
@@ -15,14 +16,36 @@ RUN apt-get update && \
         libwebp-dev \
         libzip-dev \
         netcat \
+        nginx  \
         procps \
-        supervisor \
         vim \
         yarn \
         zip \
         zlib1g-dev
 
-RUN docker-php-ext-install bcmath exif gd gmp ldap mbstring mysqli pcntl pdo pdo_mysql pdo_pgsql sysvmsg zip
+RUN docker-php-ext-configure gd --with-freetype --with-webp  --with-jpeg
+
+RUN docker-php-ext-install bcmath
+RUN docker-php-ext-install exif
+RUN docker-php-ext-install gd
+RUN docker-php-ext-install gmp
+RUN docker-php-ext-install ldap
+RUN docker-php-ext-install mbstring
+RUN docker-php-ext-install mysqli
+RUN docker-php-ext-install pcntl
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_pgsql
+RUN docker-php-ext-install sysvmsg
+RUN docker-php-ext-install zip
+
+# xDebug
+RUN pecl install xdebug
+COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
+
+RUN mkdir -p /usr/local/dockr/composer
+# Composer
+RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
 
 # Node and NPM
 RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/node-npm-install.sh | bash
@@ -30,36 +53,19 @@ RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/
 # PHP Memory Limit conf
 COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
 
-# xDebug
-RUN pecl install xdebug
-COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
-
-# DockR Dependencies
-RUN mkdir /usr/local/dockr && chmod u+x -R /usr/local/dockr
-COPY dockr /usr/local/dockr
-
-# Composer
-RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
-
 WORKDIR /var/www/html
 
-RUN chmod -R 777 /var/www/html && mkdir public
+RUN mkdir /var/www/html/public
 
-# Apache
-COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
-# Supervisor config
-COPY dockr/supervisor/supervisor.conf /etc/supervisor/supervisord.conf
-COPY dockr/supervisor/supervisor.conf /etc/supervisord.conf
+COPY dockr/scripts/composer-version.sh /usr/local/dockr/composer-version.sh
 
-# Entrypoint
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["service", "nginx", "start"]
 
-RUN a2enmod rewrite \
-    && rm -rf public \
+RUN rm -rf /var/www/html/public \
     && apt-get clean
