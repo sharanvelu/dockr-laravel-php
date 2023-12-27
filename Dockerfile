@@ -6,6 +6,7 @@ RUN apt-get update && \
     apt-get install -y \
         git \
         libfreetype6-dev \
+        libicu-dev \
         libjpeg62-turbo-dev \
         libldap2-dev \
         libgmp-dev \
@@ -24,11 +25,13 @@ RUN apt-get update && \
         zlib1g-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-webp  --with-jpeg
+RUN docker-php-ext-configure intl
 
 RUN docker-php-ext-install bcmath
 RUN docker-php-ext-install exif
 RUN docker-php-ext-install gd
 RUN docker-php-ext-install gmp
+RUN docker-php-ext-install intl
 RUN docker-php-ext-install ldap
 RUN docker-php-ext-install mbstring
 RUN docker-php-ext-install mysqli
