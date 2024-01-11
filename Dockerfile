@@ -1,4 +1,4 @@
-FROM php:8.1.6-fpm
+FROM php:8.1.7-fpm
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
