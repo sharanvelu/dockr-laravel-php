@@ -16,7 +16,6 @@ RUN apt-get update && \
         libpq-dev \
         libwebp-dev \
         libzip-dev \
-        netcat \
         nginx  \
         procps \
         vim \
