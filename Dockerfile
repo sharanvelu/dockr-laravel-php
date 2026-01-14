@@ -5,16 +5,10 @@ LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="I
 RUN apt-get update && \
     apt-get install -y \
         git \
-        libfreetype6-dev \
         libicu-dev \
-        libjpeg62-turbo-dev \
-        libldap2-dev \
-        libgmp-dev \
         libmcrypt-dev \
         libonig-dev \
-        libpng-dev \
         libpq-dev \
-        libwebp-dev \
         libzip-dev \
         nginx  \
         procps \
@@ -23,15 +17,26 @@ RUN apt-get update && \
         zip \
         zlib1g-dev
 
-RUN docker-php-ext-configure gd --with-freetype --with-webp  --with-jpeg
-RUN docker-php-ext-configure intl
+## GD Extension
+RUN apt-get update && \
+    apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libgmp-dev libpng-dev libwebp-dev && \
+    docker-php-ext-configure gd --with-freetype --with-webp  --with-jpeg && \
+    docker-php-ext-install -j$(nproc) gd
+
+# PHP Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Internationalization Extension
+RUN docker-php-ext-configure intl && \
+    docker-php-ext-install intl
+
+RUN apt-get update && \
+    apt-get install -y libldap2-dev && \
+    docker-php-ext-install ldap
 
 RUN docker-php-ext-install bcmath
 RUN docker-php-ext-install exif
-RUN docker-php-ext-install gd
 RUN docker-php-ext-install gmp
-RUN docker-php-ext-install intl
-RUN docker-php-ext-install ldap
 RUN docker-php-ext-install mbstring
 RUN docker-php-ext-install mysqli
 RUN docker-php-ext-install pcntl
@@ -45,9 +50,9 @@ RUN docker-php-ext-install zip
 RUN pecl install xdebug
 COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
 
-RUN mkdir -p /usr/local/dockr/composer
 # Composer
-RUN curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
+RUN mkdir -p /usr/local/dockr/composer && \
+    curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
 
 # Node and NPM
 RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/node-npm-install.sh | bash
