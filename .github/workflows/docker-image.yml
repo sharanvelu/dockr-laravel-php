@@ -7,7 +7,7 @@ on:
     branches: ["*"]
 
 jobs:
-  build-and-push-docker-image:
+  extract-docker-tag:
     if: ${{ startsWith(github.ref_name, 'php-') }}
     runs-on: ubuntu-latest
 
@@ -17,6 +17,11 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/php\-})"
         id: extract_branch
 
+  build-and-push-docker-image:
+    needs: extract-docker-tag
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -38,11 +43,12 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }}
+          tags: sharanvelu/laravel-php:${{ needs.extract-docker-tag.steps.extract_branch.outputs.branch }}
 
   delete-branch:
-    if: ${{ startsWith(github.ref_name, 'php-') }}
+    needs: build-and-push-docker-image
     runs-on: ubuntu-latest
+
     steps:
       - name: Delete the branch this run is on
         if: ${{ github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'template' }}
