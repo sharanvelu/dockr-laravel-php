@@ -1,0 +1,63 @@
+name: Generate php-* branches from template
+
+on:
+  push:
+    branches: [template]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2.3', '8.2.4', '8.2.5', '8.2.6']
+
+    steps:
+      - name: Checkout template branch
+        uses: actions/checkout@v4
+        with:
+          ref: template
+          fetch-depth: 0
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create/update php branch and patch Dockerfile
+        env:
+          PHP_VERSION: ${{ matrix.php }}
+        run: |
+          set -euo pipefail
+
+          BRANCH="php-${PHP_VERSION}"
+
+          # Create/reset local branch from the current template commit
+          git checkout -B "${BRANCH}"
+
+          # Replace placeholder in Dockerfile
+          # (assumes Dockerfile is at repo root; adjust path if needed)
+          if ! grep -q "GHA_PHP_VERSION" Dockerfile; then
+            echo "ERROR: Dockerfile does not contain GHA_PHP_VERSION placeholder"
+            exit 1
+          fi
+
+          # Portable replacement (no sed -i differences)
+          perl -pe "s/GHA_PHP_VERSION/\Q${PHP_VERSION}\E/g" Dockerfile > Dockerfile.tmp
+          mv Dockerfile.tmp Dockerfile
+
+          # Commit only if there are changes
+          if git diff --quiet; then
+            echo "No changes for ${BRANCH}; skipping commit."
+          else
+            git add Dockerfile
+            git commit -m "Set PHP version to ${PHP_VERSION}"
+          fi
+
+          # Push branch to origin (create or update)
+          git push --force-with-lease origin "${BRANCH}"
