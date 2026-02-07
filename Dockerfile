@@ -13,7 +13,6 @@ RUN apt-get update && \
         nginx  \
         procps \
         vim \
-        yarn \
         zip \
         zlib1g-dev
 
