@@ -1,4 +1,4 @@
-FROM php:GHA_PHP_VERSION-fpm
+FROM php:8.5.2-fpm
 
 LABEL Author="Sharan" "org.opencontainers.image.authors"="Sharan" Description="Image used for Dockr Coantiners." "com.example.vendor"="DockR.in" website="dockr.in"
 
