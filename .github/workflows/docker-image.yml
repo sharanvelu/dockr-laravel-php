@@ -44,3 +44,21 @@ jobs:
                     platforms: linux/amd64,linux/arm64
                     push: true
                     tags: sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }}
+
+    delete-branch:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Delete the branch this run is on
+              if: ${{ github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'template' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  OWNER: ${{ github.repository_owner }}
+                  REPO: ${{ github.event.repository.name }}
+                  BRANCH: ${{ github.ref_name }}
+              run: |
+                  echo "Deleting branch: ${BRANCH}"
+                  # Delete the git ref: refs/heads/<branch>
+                  curl -sS -X DELETE \
+                    -H "Authorization: Bearer ${GH_TOKEN}" \
+                    -H "Accept: application/vnd.github+json" \
+                    "https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}"
