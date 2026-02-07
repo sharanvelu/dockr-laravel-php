@@ -7,18 +7,21 @@ on:
     branches: ["*"]
 
 jobs:
-  extract-docker-tag:
+  extract-docker-image-tag:
     if: ${{ startsWith(github.ref_name, 'php-') }}
     runs-on: ubuntu-latest
 
+    outputs:
+      docker_image_tag: ${{ steps.vars.outputs.docker_image_tag }}
+
     steps:
-      - name: Extract branch name
+      - name: Extract Docker Image Tag from branch name
+        id: vars
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/php\-})"
-        id: extract_branch
+        run: echo "docker_image_tag=${GITHUB_REF#refs/heads/php\-}" >> "$GITHUB_OUTPUT"
 
   build-and-push-docker-image:
-    needs: extract-docker-tag
+    needs: extract-docker-image-tag
     runs-on: ubuntu-latest
 
     steps:
@@ -43,7 +46,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: sharanvelu/laravel-php:${{ needs.extract-docker-tag.steps.extract_branch.outputs.branch }}
+          tags: sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}
 
   delete-branch:
     needs: build-and-push-docker-image
