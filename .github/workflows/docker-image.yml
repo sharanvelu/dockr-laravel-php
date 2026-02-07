@@ -2,63 +2,59 @@
 
 name: DockerBuild
 
-# Controls when the workflow will run
 on:
-    # Triggers the workflow on push or pull request events but only for the "development" branch
-    push:
-        branches: [ "*" ]
+  push:
+    branches: ["*"]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-    # This workflow contains a single job called "build-and-push-docker-image"
-    build-and-push-docker-image:
-        # The type of runner that the job will run on
-        runs-on: ubuntu-latest
+  build-and-push-docker-image:
+    if: ${{ startsWith(github.ref_name, 'php-') }}
+    runs-on: ubuntu-latest
 
-        # Steps represent a sequence of tasks that will be executed as part of the job
-        steps:
-            -   name: Extract branch name
-                shell: bash
-                run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/php\-})"
-                id: extract_branch
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/php\-})"
+        id: extract_branch
 
-            -   name: Checkout
-                uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-            -   name: Set up QEMU
-                uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            -   name: Set up Docker Buildx
-                uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            -   name: Login to DockerHub
-                uses: docker/login-action@v2
-                with:
-                    username: ${{ secrets.DOCKER_USERNAME }}
-                    password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-            -   name: Build and push
-                uses: docker/build-push-action@v3
-                with:
-                    context: .
-                    platforms: linux/amd64,linux/arm64
-                    push: true
-                    tags: sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: sharanvelu/laravel-php:${{ steps.extract_branch.outputs.branch }}
 
-    delete-branch:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Delete the branch this run is on
-              if: ${{ github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'template' }}
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  OWNER: ${{ github.repository_owner }}
-                  REPO: ${{ github.event.repository.name }}
-                  BRANCH: ${{ github.ref_name }}
-              run: |
-                  echo "Deleting branch: ${BRANCH}"
-                  # Delete the git ref: refs/heads/<branch>
-                  curl -sS -X DELETE \
-                    -H "Authorization: Bearer ${GH_TOKEN}" \
-                    -H "Accept: application/vnd.github+json" \
-                    "https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}"
+  delete-branch:
+    if: ${{ startsWith(github.ref_name, 'php-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the branch this run is on
+        if: ${{ github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'template' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          echo "Deleting branch: ${BRANCH}"
+          # Delete the git ref: refs/heads/<branch>
+          curl -sS -X DELETE \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}"
