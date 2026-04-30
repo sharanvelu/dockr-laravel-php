@@ -1,4 +1,6 @@
-FROM php:8.3.1-fpm-alpine AS builder
+ARG PHP_VERSION=8.3.1
+
+FROM php:${PHP_VERSION}-fpm-alpine AS builder
 
 RUN apk add --no-cache \
         $PHPIZE_DEPS \
@@ -33,7 +35,7 @@ RUN apk add --no-cache \
     && pecl install redis xdebug \
     && docker-php-ext-enable redis
 
-FROM php:8.3.1-fpm-alpine AS runtime
+FROM php:${PHP_VERSION}-fpm-alpine AS runtime
 
 LABEL Author="Sharan" \
       "org.opencontainers.image.authors"="Sharan" \
