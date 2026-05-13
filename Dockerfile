@@ -68,10 +68,14 @@ COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
 COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
 
-RUN mkdir -p /usr/local/dockr/composer && \
-    curl -o- https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/composer-install.sh | bash
+ARG COMPOSER_VERSION=2.9.8
+RUN curl -fsSL "https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar" -o /usr/local/bin/composer && \
+    chmod +x /usr/local/bin/composer
 
-RUN curl -fsSL https://raw.githubusercontent.com/sharanvelu/dockr-extras/master/node-npm-install.sh | bash
+COPY --from=node:26.1.0-alpine /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:26.1.0-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 WORKDIR /var/www/html
 
