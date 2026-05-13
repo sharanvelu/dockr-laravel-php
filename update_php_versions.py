@@ -17,7 +17,7 @@ def fetch_php_tags():
     tags = []
     url = REPO_URL
     params = {"page_size": 100, "ordering": "last_updated"}
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=120)
 
     while url:
         resp = requests.get(url, params=params)
