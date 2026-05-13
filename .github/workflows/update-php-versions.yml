@@ -1,0 +1,27 @@
+name: Update PHP Versions
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-php-versions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout template branch
+        uses: actions/checkout@v4
+        with:
+          ref: template
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests packaging
+
+      - name: Run update script
+        run: python update_php_versions.py
