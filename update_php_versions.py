@@ -12,12 +12,13 @@ DOCKERFILE_PATH = "Dockerfile"
 REPO_URL = "https://hub.docker.com/v2/repositories/library/php/tags"
 TAG_PATTERN = re.compile(r"^(\d+\.\d+\.\d+)-fpm-alpine$")
 
+DURATION_IN_HOURS = 24
 
 def fetch_php_tags():
     tags = []
     url = REPO_URL
     params = {"page_size": 100, "ordering": "last_updated"}
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=DURATION_IN_HOURS)
 
     while url:
         resp = requests.get(url, params=params)
@@ -68,6 +69,7 @@ def update_dockerfile(version):
 def process_version(version):
     branch = f"php-{version}"
     print(f"\nProcessing PHP {version} (branch: {branch})")
+    return
 
     run("git checkout template")
     run(f"git branch -D {branch}", check=False)
@@ -89,10 +91,10 @@ def main():
     versions = fetch_php_tags()
 
     if not versions:
-        print("No PHP versions updated in the last 48 hours")
+        print(f"No PHP versions updated in the last {DURATION_IN_HOURS} hours")
         return
 
-    print(f"Found {len(versions)} versions updated in the last 48 hours:")
+    print(f"Found {len(versions)} versions updated in the last {DURATION_IN_HOURS} hours:")
     for v in versions:
         print(f"  - {v}")
 
