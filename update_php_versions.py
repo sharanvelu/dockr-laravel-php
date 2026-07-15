@@ -69,6 +69,9 @@ def update_dockerfile(version):
 def process_version(version):
     branch = f"php-{version}"
 
+    print(f"\n------------------------------------------------------------")
+    print(f"Processing Version {version}. Branch: {branch}")
+
     run("git checkout template")
     run(f"git branch -D {branch}", check=False)
     run(f"git checkout -b {branch}")
