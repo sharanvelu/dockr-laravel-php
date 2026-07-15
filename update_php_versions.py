@@ -68,8 +68,6 @@ def update_dockerfile(version):
 
 def process_version(version):
     branch = f"php-{version}"
-    print(f"\nProcessing PHP {version} (branch: {branch})")
-    return
 
     run("git checkout template")
     run(f"git branch -D {branch}", check=False)
@@ -97,6 +95,8 @@ def main():
     print(f"Found {len(versions)} versions updated in the last {DURATION_IN_HOURS} hours:")
     for v in versions:
         print(f"  - {v}")
+
+    run("git reset --hard")
 
     for version in versions:
        process_version(version)
