@@ -44,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v5,linux/arm/v7,linux/arm64/v8
           push: true
           tags: sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}
 
