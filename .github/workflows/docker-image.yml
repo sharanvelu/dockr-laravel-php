@@ -6,6 +6,10 @@ on:
   push:
     branches: ["*"]
 
+concurrency:
+  group: docker-build
+  cancel-in-progress: false
+
 jobs:
   extract-docker-image-tag:
     if: ${{ startsWith(github.ref_name, 'php-') }}
