@@ -56,6 +56,7 @@ RUN apk add --no-cache \
         libpq \
         libwebp \
         libzip \
+        mysql-client \
         nginx \
         oniguruma \
         zlib \
