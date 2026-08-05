@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import re
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -88,14 +89,27 @@ def process_version(version):
 
 
 def main():
-    print("Fetching PHP tags from Docker Hub...")
-    versions = fetch_php_tags()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--versions",
+        help="Comma-separated list of PHP versions to process (e.g. 8.2.1,8.2.2,8.2.3). "
+             "Takes precedence over fetching tags from Docker Hub.",
+    )
+    args = parser.parse_args()
 
-    if not versions:
-        print(f"No PHP versions updated in the last {DURATION_IN_HOURS} hours")
-        return
+    if args.versions:
+        versions = sorted({v.strip() for v in args.versions.split(",") if v.strip()}, key=Version)
+        print(f"Using the provided versions. Total: {len(versions)}")
+    else:
+        print("Fetching PHP tags from Docker Hub...")
+        versions = fetch_php_tags()
 
-    print(f"Found {len(versions)} versions updated in the last {DURATION_IN_HOURS} hours:")
+        if not versions:
+            print(f"No PHP versions updated in the last {DURATION_IN_HOURS} hours")
+            return
+
+        print(f"Found {len(versions)} versions updated in the last {DURATION_IN_HOURS} hours:")
+
     for v in versions:
         print(f"  - {v}")
 
