@@ -99,7 +99,7 @@ def main():
 
     if args.versions:
         versions = sorted({v.strip() for v in args.versions.split(",") if v.strip()}, key=Version)
-        print(f"Using {len(versions)} versions provided via --versions:")
+        print(f"Using the provided versions. Total: {len(versions)}")
     else:
         print("Fetching PHP tags from Docker Hub...")
         versions = fetch_php_tags()
