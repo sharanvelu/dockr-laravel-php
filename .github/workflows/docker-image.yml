@@ -20,16 +20,36 @@ jobs:
         shell: bash
         run: echo "docker_image_tag=${GITHUB_REF#refs/heads/php\-}" >> "$GITHUB_OUTPUT"
 
-  build-and-push-docker-image:
+  build:
     needs: extract-docker-image-tag
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          - arch: armv7
+            platform: linux/arm/v7
+            runner: ubuntu-latest
+            qemu: true
+          - arch: armv6
+            platform: linux/arm/v6
+            runner: ubuntu-latest
+            qemu: true
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up QEMU
+        if: ${{ matrix.qemu }}
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.platform }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,16 +60,62 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm64/v8
-          push: true
-          tags: sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=sharanvelu/laravel-php,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-and-push:
+    needs: [extract-docker-image-tag, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          TAG="sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
+          docker buildx imagetools create -t "$TAG" \
+            $(printf 'sharanvelu/laravel-php@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect "sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
 
   delete-branch:
-    needs: build-and-push-docker-image
+    needs: merge-and-push
     runs-on: ubuntu-latest
 
     steps:
