@@ -1,43 +1,88 @@
-FROM php:8.0-apache-buster
+ARG PHP_VERSION=8.3.1
 
-RUN apt-get update && \
-    apt-get install -y \
-        libonig-dev \
-        libzip-dev \
+FROM php:${PHP_VERSION}-fpm-alpine AS builder
+
+RUN apk add --no-cache \
+        $PHPIZE_DEPS \
+        freetype-dev \
+        gmp-dev \
+        icu-dev \
+        libjpeg-turbo-dev \
         libpng-dev \
-        zlib1g-dev \
-        libmcrypt-dev \
-        vim \
-        git \
-        supervisor \
-        zip \
-        procps \
-        libfreetype6-dev \
         libwebp-dev \
-        libpng-dev \
-        libgmp-dev \
-        libldap2-dev \
-        netcat \
-        apache2
+        libzip-dev \
+        linux-headers \
+        oniguruma-dev \
+        openldap-dev \
+        postgresql-dev \
+        zlib-dev \
+    && docker-php-ext-configure gd --with-freetype --with-webp --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        bcmath \
+        exif \
+        gd \
+        gmp \
+        intl \
+        ldap \
+        mbstring \
+        mysqli \
+        pcntl \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        sysvmsg \
+        zip \
+    && pecl install redis xdebug \
+    && docker-php-ext-enable redis
 
-RUN docker-php-ext-install gmp pcntl ldap sysvmsg exif mbstring zip gd bcmath mysqli pdo pdo_mysql
+FROM php:${PHP_VERSION}-fpm-alpine AS runtime
 
-RUN echo 'memory_limit = 512M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini \
-    && echo "upload_max_filesize = 1000M;" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "post_max_size = 1000M;" >> /usr/local/etc/php/conf.d/max_size.ini
+LABEL Author="Sharan" \
+      "org.opencontainers.image.authors"="Sharan" \
+      Description="Image used for Dockr Containers." \
+      "com.example.vendor"="DockR.in" \
+      website="dockr.in"
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer --version=2.1.3
+RUN apk add --no-cache \
+        bash \
+        curl \
+        freetype \
+        git \
+        gmp \
+        icu-libs \
+        libjpeg-turbo \
+        libldap \
+        libpng \
+        libpq \
+        libwebp \
+        libzip \
+        nginx \
+        oniguruma \
+        zlib \
+    && mkdir -p /var/log/nginx /run/nginx \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+
+COPY php/xdebug.ini /usr/local/etc/php/conf.d/dockr-xdebug.ini
+COPY php/mem-limit.ini /usr/local/etc/php/conf.d/dockr-mem-limit.ini
+
+ARG COMPOSER_VERSION=2.9.8
+RUN curl -fsSL "https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar" -o /usr/local/bin/composer && \
+    chmod +x /usr/local/bin/composer
+
+COPY --from=node:26.1.0-alpine /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:26.1.0-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 WORKDIR /var/www/html
 
-RUN chmod -R 777 /var/www/html \
-    && mkdir public
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY composer-version.sh /usr/local/dockr/composer-version.sh
+COPY entrypoint.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh /usr/local/dockr/composer-version.sh
 
-COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
-
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
-
-RUN a2enmod rewrite \
-    && rm -rf public \
-    && apt-get clean
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["php-fpm"]
