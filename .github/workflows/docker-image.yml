@@ -4,11 +4,10 @@ name: DockerBuild
 
 on:
   push:
-    branches: ["*"]
+    branches: ["php-*"]
 
 jobs:
   extract-docker-image-tag:
-    if: ${{ startsWith(github.ref_name, 'php-') }}
     runs-on: ubuntu-latest
 
     outputs:
