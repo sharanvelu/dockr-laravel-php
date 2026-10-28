@@ -52,6 +52,8 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          build-args: |
+            PHP_VERSION=${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}
           outputs: type=image,name=sharanvelu/laravel-php,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
