@@ -1,0 +1,90 @@
+{
+  "name": "Update PHP versions",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "name": "Daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const cutoff = Date.now() - 24 * 60 * 60 * 1000;\nconst pattern = /^(\\d+\\.\\d+\\.\\d+)-fpm-alpine$/;\nconst versions = new Set();\nlet url = 'https://hub.docker.com/v2/repositories/library/php/tags?page_size=100&ordering=last_updated&name=fpm-alpine';\n\nouter: while (url) {\n  const data = await this.helpers.httpRequest({ url, json: true });\n  for (const tag of data.results || []) {\n    if (new Date(tag.last_updated).getTime() < cutoff) break outer;\n    const m = pattern.exec(tag.name);\n    if (m) versions.add(m[1]);\n  }\n  url = data.next;\n}\n\nconst cmp = (a, b) => {\n  const x = a.split('.').map(Number), y = b.split('.').map(Number);\n  return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];\n};\n\nreturn [...versions].sort(cmp).map(v => ({ json: { version: v, branch: `php-${v}` } }));"
+      },
+      "name": "Find New Versions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/actions/workflows/build-php-image.yml/dispatches",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'template', inputs: { version: $json.version } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "name": "Dispatch Build",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "notes": "Triggers Build PHP Image on template with the version as input. Returns 204 with no body. Needs a PAT with Actions: read/write."
+    }
+  ],
+  "connections": {
+    "Daily": {
+      "main": [
+        [
+          {
+            "node": "Find New Versions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find New Versions": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

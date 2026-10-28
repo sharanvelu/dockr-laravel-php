@@ -1,27 +1,42 @@
 # This is a basic workflow to help you get started with Actions
 
-name: DockerBuild
+name: Build PHP Image
+
+run-name: Build PHP ${{ inputs.version }}
 
 on:
-  push:
-    branches: ["*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "PHP version to build (e.g. 8.4.2)"
+        required: true
+        type: string
 
 jobs:
-  extract-docker-image-tag:
-    if: ${{ startsWith(github.ref_name, 'php-') }}
+  validate-php-version:
+    name: Validate version
     runs-on: ubuntu-latest
 
     outputs:
       docker_image_tag: ${{ steps.vars.outputs.docker_image_tag }}
 
     steps:
-      - name: Extract Docker Image Tag from branch name
+      - name: Validate PHP version and set Docker Image Tag
         id: vars
         shell: bash
-        run: echo "docker_image_tag=${GITHUB_REF#refs/heads/php\-}" >> "$GITHUB_OUTPUT"
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid PHP version: $VERSION" >&2
+            exit 1
+          fi
+          echo "docker_image_tag=${VERSION}" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: extract-docker-image-tag
+    name: Build ${{ matrix.arch }} image
+    needs: validate-php-version
+
     strategy:
       matrix:
         include:
@@ -31,6 +46,7 @@ jobs:
           - arch: arm64
             platform: linux/arm64
             runner: ubuntu-24.04-arm
+
     runs-on: ${{ matrix.runner }}
 
     steps:
@@ -52,6 +68,8 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          build-args: |
+            PHP_VERSION=${{ needs.validate-php-version.outputs.docker_image_tag }}
           outputs: type=image,name=sharanvelu/laravel-php,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -69,7 +87,8 @@ jobs:
           retention-days: 1
 
   merge-and-push:
-    needs: [extract-docker-image-tag, build]
+    name: Publish multi-arch image
+    needs: [validate-php-version, build]
     runs-on: ubuntu-latest
 
     steps:
@@ -92,30 +111,10 @@ jobs:
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
-          TAG="sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
+          TAG="sharanvelu/laravel-php:${{ needs.validate-php-version.outputs.docker_image_tag }}"
           docker buildx imagetools create -t "$TAG" \
             $(printf 'sharanvelu/laravel-php@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect "sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
-
-  delete-branch:
-    needs: merge-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Delete the branch this run is on
-        if: ${{ github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'template' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
-          BRANCH: ${{ github.ref_name }}
-        run: |
-          echo "Deleting branch: ${BRANCH}"
-          # Delete the git ref: refs/heads/<branch>
-          curl -sS -X DELETE \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}"
+          docker buildx imagetools inspect "sharanvelu/laravel-php:${{ needs.validate-php-version.outputs.docker_image_tag }}"
