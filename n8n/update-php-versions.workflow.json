@@ -34,37 +34,30 @@
     },
     {
       "parameters": {
-        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/git/ref/heads/template",
+        "method": "POST",
+        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/actions/workflows/docker-image.yml/dispatches",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "githubApi"
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'template', inputs: { version: $json.version } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 5000
+            }
+          }
+        }
       },
-      "name": "Get Template Ref",
+      "name": "Dispatch Build",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
         440,
         0
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/git/refs",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "githubApi",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ ref: 'refs/heads/php-' + $('Find New Versions').item.json.version, sha: $json.object.sha }) }}"
-      },
-      "name": "Create Branch",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        660,
-        0
       ],
-      "onError": "continueRegularOutput",
-      "notes": "Creates php-X at the template SHA with no commit; the DockerBuild workflow takes the version from the branch name. 422 means the branch already exists, which is ignored."
+      "notes": "Triggers DockerBuild on template with the version as input. Returns 204 with no body. Needs a PAT with Actions: read/write."
     }
   ],
   "connections": {
@@ -83,18 +76,7 @@
       "main": [
         [
           {
-            "node": "Get Template Ref",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Template Ref": {
-      "main": [
-        [
-          {
-            "node": "Create Branch",
+            "node": "Dispatch Build",
             "type": "main",
             "index": 0
           }
