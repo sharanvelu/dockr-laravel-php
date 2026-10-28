@@ -35,7 +35,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/actions/workflows/docker-image.yml/dispatches",
+        "url": "https://api.github.com/repos/sharanvelu/dockr-laravel-php/actions/workflows/build-php-image.yml/dispatches",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "githubApi",
         "sendBody": true,
@@ -57,7 +57,7 @@
         440,
         0
       ],
-      "notes": "Triggers DockerBuild on template with the version as input. Returns 204 with no body. Needs a PAT with Actions: read/write."
+      "notes": "Triggers Build PHP Image on template with the version as input. Returns 204 with no body. Needs a PAT with Actions: read/write."
     }
   ],
   "connections": {

@@ -1,6 +1,8 @@
 # This is a basic workflow to help you get started with Actions
 
-name: DockerBuild
+name: Build PHP Image
+
+run-name: Build PHP ${{ inputs.version }}
 
 on:
   workflow_dispatch:
@@ -12,6 +14,7 @@ on:
 
 jobs:
   extract-docker-image-tag:
+    name: Validate version
     runs-on: ubuntu-latest
 
     outputs:
@@ -31,6 +34,7 @@ jobs:
           echo "docker_image_tag=${VERSION}" >> "$GITHUB_OUTPUT"
 
   build:
+    name: Build ${{ matrix.arch }} image
     needs: extract-docker-image-tag
     strategy:
       matrix:
@@ -81,6 +85,7 @@ jobs:
           retention-days: 1
 
   merge-and-push:
+    name: Publish multi-arch image
     needs: [extract-docker-image-tag, build]
     runs-on: ubuntu-latest
 
