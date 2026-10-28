@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  extract-docker-image-tag:
+  validate-php-version:
     name: Validate version
     runs-on: ubuntu-latest
 
@@ -35,7 +35,8 @@ jobs:
 
   build:
     name: Build ${{ matrix.arch }} image
-    needs: extract-docker-image-tag
+    needs: validate-php-version
+
     strategy:
       matrix:
         include:
@@ -45,6 +46,7 @@ jobs:
           - arch: arm64
             platform: linux/arm64
             runner: ubuntu-24.04-arm
+
     runs-on: ${{ matrix.runner }}
 
     steps:
@@ -67,7 +69,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           build-args: |
-            PHP_VERSION=${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}
+            PHP_VERSION=${{ needs.validate-php-version.outputs.docker_image_tag }}
           outputs: type=image,name=sharanvelu/laravel-php,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -86,7 +88,7 @@ jobs:
 
   merge-and-push:
     name: Publish multi-arch image
-    needs: [extract-docker-image-tag, build]
+    needs: [validate-php-version, build]
     runs-on: ubuntu-latest
 
     steps:
@@ -109,10 +111,10 @@ jobs:
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
-          TAG="sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
+          TAG="sharanvelu/laravel-php:${{ needs.validate-php-version.outputs.docker_image_tag }}"
           docker buildx imagetools create -t "$TAG" \
             $(printf 'sharanvelu/laravel-php@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect "sharanvelu/laravel-php:${{ needs.extract-docker-image-tag.outputs.docker_image_tag }}"
+          docker buildx imagetools inspect "sharanvelu/laravel-php:${{ needs.validate-php-version.outputs.docker_image_tag }}"
